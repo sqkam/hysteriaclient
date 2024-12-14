@@ -1,10 +1,12 @@
 package proxymux
 
 import (
+	"context"
 	"net"
 	"sync"
 
 	"github.com/apernet/hysteria/extras/v2/correctnet"
+	"github.com/metacubex/mihomo/component/resolver"
 )
 
 type muxManager struct {
@@ -48,9 +50,9 @@ func (m *muxManager) GetOrCreate(address string) (*muxListener, error) {
 }
 
 func (m *muxManager) canonicalizeAddrPort(address string) (string, error) {
-	taddr, err := net.ResolveTCPAddr("tcp", address)
+	taddr, err := resolver.ResolveIPWithResolver(context.Background(), address, resolver.SystemResolver)
 	if err != nil {
-		return "", err
+		return address, nil
 	}
 	return taddr.String(), nil
 }

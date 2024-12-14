@@ -1,7 +1,10 @@
 package main
 
 import (
+	"github.com/metacubex/mihomo/component/resolver"
+	_ "github.com/metacubex/mihomo/dns"
 	"github.com/spf13/viper"
+
 	"github.com/sqkam/hysteriaclient/app"
 )
 
@@ -30,5 +33,6 @@ func main() {
 	if err := viper.Unmarshal(&hyConfig); err != nil {
 		panic(err)
 	}
+	resolver.DisableIPv6 = false
 	app.Run(hyConfig)
 }

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/hex"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/metacubex/mihomo/component/resolver"
 
 	"github.com/apernet/hysteria/core/v2/client"
 	"github.com/apernet/hysteria/extras/v2/obfs"
@@ -240,7 +243,21 @@ func (c *clientConfig) fillServerAddr(hyConfig *client.Config) error {
 	if len(c.Servers) > 0 {
 		addr, err = udphop.ResolveUDPHopAddrs(host, port, append(c.Servers, host))
 	} else if !isPortHoppingPort(port) {
-		addr, err = net.ResolveUDPAddr("udp", hostPort)
+
+		taddr, err := resolver.ResolveIPWithResolver(context.Background(), hostPort, resolver.SystemResolver)
+		if err != nil {
+			return configError{Field: "server", Err: err}
+		}
+		atoi, err := strconv.Atoi(port)
+		if err != nil {
+			return configError{Field: "server", Err: err}
+		}
+		addr = &net.UDPAddr{
+			IP:   net.ParseIP(taddr.String()),
+			Port: atoi,
+			Zone: taddr.Zone(),
+		}
+
 	} else {
 		addr, err = udphop.ResolveUDPHopAddr(hostPort)
 	}
@@ -598,7 +615,6 @@ func run(config clientConfig, runnerChan chan clientModeRunnerResult) {
 	}
 	r := runner.Run()
 	runnerChan <- r
-	c.Close()
 
 	if r.Err != nil {
 		logger.Fatal(r.Msg, zap.Error(r.Err))

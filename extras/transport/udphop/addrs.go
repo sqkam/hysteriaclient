@@ -1,8 +1,11 @@
 package udphop
 
 import (
+	"context"
 	"net"
 	"strings"
+
+	"github.com/metacubex/mihomo/component/resolver"
 
 	"github.com/apernet/hysteria/extras/v2/utils"
 )
@@ -44,11 +47,14 @@ func (a *UDPHopAddrs) Addrs() ([]net.Addr, error) {
 func ResolveUDPHopAddrs(host, port string, addrs []string) (Addrs, error) {
 	ips := make([]net.IP, 0)
 	for _, host := range addrs {
-		ip, err := net.ResolveIPAddr("ip", strings.Trim(strings.Trim(host, "["), "]"))
+
+		taddr, err := resolver.ResolveIPWithResolver(context.Background(), strings.Trim(strings.Trim(host, "["), "]"), resolver.SystemResolver)
 		if err != nil {
 			return nil, err
 		}
-		ips = append(ips, ip.IP)
+		ip := net.ParseIP(taddr.String())
+
+		ips = append(ips, ip)
 	}
 
 	result := &UDPHopAddrs{
