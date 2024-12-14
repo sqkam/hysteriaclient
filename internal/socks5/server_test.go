@@ -1,11 +1,12 @@
 package socks5
 
 import (
-	"github.com/sqkam/hysteriaclient/internal/utils_test"
 	"net"
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/sqkam/hysteriaclient/internal/utils_test"
 
 	"github.com/stretchr/testify/assert"
 )

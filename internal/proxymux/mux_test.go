@@ -2,11 +2,12 @@ package proxymux
 
 import (
 	"bytes"
-	"github.com/sqkam/hysteriaclient/internal/proxymux/internal/mocks"
 	"net"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/sqkam/hysteriaclient/internal/proxymux/internal/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

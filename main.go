@@ -622,26 +622,26 @@ func run(config clientConfig, runnerChan chan clientModeRunnerResult) {
 	}
 }
 
-func main() {
-	Run()
+type HyConfig struct {
+	Hys []clientConfig `mapstructure:"hys"`
 }
 
-func Run() {
-	initLogger()
+func main() {
 	initConfig()
-	logger.Info("client mode")
-
+	var hyConfig HyConfig
 	if err := viper.ReadInConfig(); err != nil {
 		logger.Fatal("failed to read client config", zap.Error(err))
-	}
-	var hyConfig struct {
-		Hys []clientConfig `mapstructure:"hys"`
 	}
 
 	if err := viper.Unmarshal(&hyConfig); err != nil {
 		logger.Fatal("failed to parse client config", zap.Error(err))
 	}
+	Run(hyConfig)
+}
 
+func Run(hyConfig HyConfig) {
+	initLogger()
+	logger.Info("client mode")
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signalChan)

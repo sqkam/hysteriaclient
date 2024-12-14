@@ -2,10 +2,10 @@ package forwarding
 
 import (
 	"crypto/rand"
-	"github.com/sqkam/hysteriaclient/internal/utils_test"
-
 	"net"
 	"testing"
+
+	"github.com/sqkam/hysteriaclient/internal/utils_test"
 
 	"github.com/stretchr/testify/assert"
 )
