@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"github.com/sqkam/hysteriaclient/extras/transport/udphop"
 	"net"
 	"os"
 	"os/signal"
@@ -65,12 +66,14 @@ func run(ctx context.Context, config clientConfig, runnerChan chan clientModeRun
 }
 
 type HyConfig struct {
-	Hys []clientConfig `mapstructure:"hys"`
+	Hys    []clientConfig `mapstructure:"hys"`
+	OnlyV6 bool           `mapstructure:"only_v6"`
 }
 
 var logger L.Logger
 
 func Run(ctx context.Context, hyConfig HyConfig, logger2 L.Logger) {
+	udphop.OnlyIpV6 = hyConfig.OnlyV6
 	logger = hL.SingLogger
 	if logger2 != nil {
 		logger = hL.NewAppendLogger(logger2)

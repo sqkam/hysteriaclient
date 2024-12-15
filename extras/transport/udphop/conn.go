@@ -194,7 +194,7 @@ func (u *udpHopPacketConn) hop() {
 	}
 	go u.recvLoop(newConn)
 	// Update addrIndex to a new random value
-	if hasIpv6() {
+	if OnlyIpV6 || hasIpv6() {
 		u.currentDest = u.v6Addrs[rand.Intn(len(u.v6Addrs))]
 	} else {
 		u.currentDest = u.v4Addrs[rand.Intn(len(u.v4Addrs))]
