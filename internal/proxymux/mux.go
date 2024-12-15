@@ -6,6 +6,9 @@ import (
 	"io"
 	"net"
 	"sync"
+
+	"github.com/metacubex/mihomo/transport/socks4"
+	"github.com/metacubex/mihomo/transport/socks5"
 )
 
 func newMuxListener(listener net.Listener, deleteFunc func()) *muxListener {
@@ -122,11 +125,13 @@ func (l *muxListener) dispatch(conn net.Conn) {
 
 	l.lock.Lock()
 	var target *subListener
-	if b[0] == 5 {
+	switch b[0] {
+	case socks4.Version, socks5.Version:
 		target = l.socksListener
-	} else {
+	default:
 		target = l.httpListener
 	}
+
 	l.lock.Unlock()
 
 	if target == nil {
