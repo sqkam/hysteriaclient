@@ -34,5 +34,5 @@ func main() {
 		panic(err)
 	}
 	resolver.DisableIPv6 = false
-	app.Run(hyConfig)
+	app.Run(hyConfig, nil)
 }

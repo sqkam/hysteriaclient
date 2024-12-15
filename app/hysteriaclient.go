@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -27,77 +26,17 @@ import (
 	"github.com/sqkam/hysteriaclient/internal/sockopts"
 	"github.com/sqkam/hysteriaclient/internal/socks5"
 	"github.com/sqkam/hysteriaclient/internal/utils"
-	"go.uber.org/zap/zapcore"
 
+	L "github.com/sagernet/sing/common/logger"
+	hL "github.com/sqkam/hysteriaclient/logger"
 	"go.uber.org/zap"
 )
 
-var logLevelMap = map[string]zapcore.Level{
-	"debug": zapcore.DebugLevel,
-	"info":  zapcore.InfoLevel,
-	"warn":  zapcore.WarnLevel,
-	"error": zapcore.ErrorLevel,
-}
-
-var logFormatMap = map[string]zapcore.EncoderConfig{
-	"console": {
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		MessageKey:     "msg",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-		EncodeTime:     zapcore.RFC3339TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-	},
-	"json": {
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		MessageKey:     "msg",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.EpochMillisTimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-	},
-}
-
 var (
-	cfgFile            string
-	logLevel           string = "info"
-	logFormat          string = "console"
+	cfgFile string
+
 	disableUpdateCheck bool
 )
-
-func initLogger() {
-	level, ok := logLevelMap[strings.ToLower(logLevel)]
-	if !ok {
-		fmt.Printf("unsupported log level: %s\n", logLevel)
-		os.Exit(1)
-	}
-	enc, ok := logFormatMap[strings.ToLower(logFormat)]
-	if !ok {
-		fmt.Printf("unsupported log format: %s\n", logFormat)
-		os.Exit(1)
-	}
-	c := zap.Config{
-		Level:             zap.NewAtomicLevelAt(level),
-		DisableCaller:     true,
-		DisableStacktrace: true,
-		Encoding:          strings.ToLower(logFormat),
-		EncoderConfig:     enc,
-		OutputPaths:       []string{"stderr"},
-		ErrorOutputPaths:  []string{"stderr"},
-	}
-	var err error
-	logger, err = c.Build()
-	if err != nil {
-		fmt.Printf("failed to initialize logger: %s\n", err)
-		os.Exit(1)
-	}
-}
-
-var logger *zap.Logger
 
 type clientConfig struct {
 	Server        string                `mapstructure:"server"`
@@ -628,8 +567,13 @@ type HyConfig struct {
 	Hys []clientConfig `mapstructure:"hys"`
 }
 
-func Run(hyConfig HyConfig) {
-	initLogger()
+var logger L.Logger
+
+func Run(hyConfig HyConfig, logger2 L.Logger) {
+	logger = hL.SingLogger
+	if logger2 != nil {
+		logger = logger2
+	}
 	logger.Info("client mode")
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
