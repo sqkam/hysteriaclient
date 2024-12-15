@@ -16,13 +16,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sqkam/hysteriaclient/internal/proxymux"
+
 	"github.com/metacubex/mihomo/component/resolver"
 
 	"github.com/apernet/hysteria/core/v2/client"
 	"github.com/apernet/hysteria/extras/v2/obfs"
 	"github.com/sqkam/hysteriaclient/extras/transport/udphop"
 	"github.com/sqkam/hysteriaclient/internal/http"
-	"github.com/sqkam/hysteriaclient/internal/proxymux"
 	"github.com/sqkam/hysteriaclient/internal/sockopts"
 	"github.com/sqkam/hysteriaclient/internal/socks5"
 	"github.com/sqkam/hysteriaclient/internal/utils"

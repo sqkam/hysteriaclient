@@ -5,7 +5,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/apernet/hysteria/extras/v2/correctnet"
+	"github.com/metacubex/mihomo/adapter/inbound"
+
 	"github.com/metacubex/mihomo/component/resolver"
 )
 
@@ -34,8 +35,7 @@ func (m *muxManager) GetOrCreate(address string) (*muxListener, error) {
 	if ml, ok := m.listeners[key]; ok {
 		return ml, nil
 	}
-
-	listener, err := correctnet.Listen("tcp", key)
+	listener, err := inbound.Listen("tcp", key)
 	if err != nil {
 		return nil, err
 	}
