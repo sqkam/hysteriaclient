@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/apernet/hysteria/core/v2/client"
 	"github.com/apernet/hysteria/extras/v2/obfs"
 	"github.com/metacubex/mihomo/component/resolver"
@@ -461,7 +463,7 @@ func (c *clientConfig) Config() (*client.Config, error) {
 }
 
 type clientModeRunner struct {
-	ModeMap map[string]func() error
+	ModeMap map[string]func(ctx context.Context) error
 }
 
 type clientModeRunnerResult struct {
@@ -470,35 +472,29 @@ type clientModeRunnerResult struct {
 	Err error
 }
 
-func (r *clientModeRunner) Add(name string, f func() error) {
+func (r *clientModeRunner) Add(name string, f func(ctx context.Context) error) {
 	if r.ModeMap == nil {
-		r.ModeMap = make(map[string]func() error)
+		r.ModeMap = make(map[string]func(ctx context.Context) error)
 	}
 	r.ModeMap[name] = f
 }
 
-func (r *clientModeRunner) Run() clientModeRunnerResult {
+func (r *clientModeRunner) Run(ctx context.Context) clientModeRunnerResult {
 	if len(r.ModeMap) == 0 {
 		return clientModeRunnerResult{OK: false, Msg: "no mode specified"}
 	}
 
-	type modeError struct {
-		Name string
-		Err  error
+	var eg errgroup.Group
+	for _, f := range r.ModeMap {
+		f := f
+		eg.Go(func() error {
+			return f(ctx)
+		})
 	}
-	errChan := make(chan modeError, len(r.ModeMap))
-	for name, f := range r.ModeMap {
-		go func(name string, f func() error) {
-			err := f()
-			errChan <- modeError{name, err}
-		}(name, f)
-	}
-	// Fatal if any one of the modes fails
-	for i := 0; i < len(r.ModeMap); i++ {
-		e := <-errChan
-		if e.Err != nil {
-			return clientModeRunnerResult{OK: false, Msg: "failed to run " + e.Name, Err: e.Err}
-		}
+
+	err := eg.Wait()
+	if err != nil {
+		return clientModeRunnerResult{OK: false, Msg: "failed to run " + err.Error()}
 	}
 
 	// We don't really have any such cases, as currently none of our modes would stop on themselves without error.

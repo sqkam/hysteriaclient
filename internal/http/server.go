@@ -5,12 +5,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/sync/errgroup"
 
 	"github.com/apernet/hysteria/core/v2/client"
 )
@@ -36,14 +39,25 @@ type EventLogger interface {
 	HTTPError(addr net.Addr, reqURL string, err error)
 }
 
-func (s *Server) Serve(listener net.Listener) error {
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			return err
+func (s *Server) Serve(ctx context.Context, listener net.Listener) error {
+	var eg errgroup.Group
+	eg.Go(func() error {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				if errors.Is(err, net.ErrClosed) {
+					return nil
+				}
+				return err
+			}
+			go s.dispatch(conn)
 		}
-		go s.dispatch(conn)
-	}
+	})
+	go func() {
+		<-ctx.Done()
+		_ = listener.Close()
+	}()
+	return eg.Wait()
 }
 
 func (s *Server) dispatch(conn net.Conn) {

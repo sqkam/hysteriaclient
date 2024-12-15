@@ -1,10 +1,11 @@
 package main
 
 import (
+	"context"
+
 	"github.com/metacubex/mihomo/component/resolver"
 	_ "github.com/metacubex/mihomo/dns"
 	"github.com/spf13/viper"
-
 	"github.com/sqkam/hysteriaclient/app"
 )
 
@@ -34,5 +35,9 @@ func main() {
 		panic(err)
 	}
 	resolver.DisableIPv6 = false
-	app.Run(hyConfig, nil)
+	ctx := context.Background()
+	// ctx,cancel:=context.WithTimeout(ctx,time.Second*5)
+	// defer cancel()
+
+	app.Run(ctx, hyConfig, nil)
 }

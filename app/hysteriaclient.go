@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"net"
 	"os"
@@ -23,7 +24,7 @@ var (
 	disableUpdateCheck bool
 )
 
-func run(config clientConfig, runnerChan chan clientModeRunnerResult) {
+func run(ctx context.Context, config clientConfig, runnerChan chan clientModeRunnerResult) {
 	c, err := client.NewReconnectableClient(
 		config.Config,
 		func(c client.Client, info *client.HandshakeInfo, count int) {
@@ -43,23 +44,23 @@ func run(config clientConfig, runnerChan chan clientModeRunnerResult) {
 
 	var runner clientModeRunner
 	if config.SOCKS5 != nil {
-		runner.Add("SOCKS5 server", func() error {
-			return clientSOCKS5(*config.SOCKS5, c)
+		runner.Add("SOCKS5 server", func(ctx context.Context) error {
+			return clientSOCKS5(ctx, *config.SOCKS5, c)
 		})
 	}
 
 	if config.HTTP != nil {
-		runner.Add("HTTP proxy server", func() error {
-			return clientHTTP(*config.HTTP, c)
+		runner.Add("HTTP proxy server", func(ctx context.Context) error {
+			return clientHTTP(ctx, *config.HTTP, c)
 		})
 	}
-	r := runner.Run()
+	r := runner.Run(ctx)
 	runnerChan <- r
 
 	if r.Err != nil {
 		logger.Fatal(r.Msg, zap.Error(r.Err))
 	} else {
-		logger.Fatal(r.Msg)
+		logger.Info(r.Msg)
 	}
 }
 
@@ -69,7 +70,7 @@ type HyConfig struct {
 
 var logger L.Logger
 
-func Run(hyConfig HyConfig, logger2 L.Logger) {
+func Run(ctx context.Context, hyConfig HyConfig, logger2 L.Logger) {
 	logger = hL.SingLogger
 	if logger2 != nil {
 		logger = hL.NewAppendLogger(logger2)
@@ -82,7 +83,7 @@ func Run(hyConfig HyConfig, logger2 L.Logger) {
 	runnerChan := make(chan clientModeRunnerResult, len(hyConfig.Hys))
 
 	for _, v := range hyConfig.Hys {
-		go run(v, runnerChan)
+		go run(ctx, v, runnerChan)
 	}
 
 	select {
@@ -102,7 +103,7 @@ func Run(hyConfig HyConfig, logger2 L.Logger) {
 	}
 }
 
-func clientSOCKS5(config socks5Config, c client.Client) error {
+func clientSOCKS5(ctx context.Context, config socks5Config, c client.Client) error {
 	if config.Listen == "" {
 		return configError{Field: "listen", Err: errors.New("listen address is empty")}
 	}
@@ -124,7 +125,7 @@ func clientSOCKS5(config socks5Config, c client.Client) error {
 		EventLogger: &socks5Logger{},
 	}
 	logger.Info("SOCKS5 server listening", zap.String("addr", config.Listen))
-	return s.Serve(l)
+	return s.Serve(ctx, l)
 }
 
 func connectLog(info *client.HandshakeInfo, count int) {
@@ -160,7 +161,7 @@ func (l *socks5Logger) UDPError(addr net.Addr, err error) {
 	}
 }
 
-func clientHTTP(config httpConfig, c client.Client) error {
+func clientHTTP(ctx context.Context, config httpConfig, c client.Client) error {
 	if config.Listen == "" {
 		return configError{Field: "listen", Err: errors.New("listen address is empty")}
 	}
@@ -185,7 +186,7 @@ func clientHTTP(config httpConfig, c client.Client) error {
 		EventLogger: &httpLogger{},
 	}
 	logger.Info("HTTP proxy server listening", zap.String("addr", config.Listen))
-	return h.Serve(l)
+	return h.Serve(ctx, l)
 }
 
 type httpLogger struct{}
