@@ -86,34 +86,35 @@ type Logger interface {
 	Fatal(args ...any)
 	Panic(args ...any)
 }
-type singLogger struct{}
+type defaultLogger struct{}
 
-func (l singLogger) Trace(args ...any) {
+func (l defaultLogger) Trace(args ...any) {
+	args = append(args, "hysteriaClient")
 	zapLogger.Debug(fmt.Sprint(args...))
 }
 
-func (l singLogger) Debug(args ...any) {
+func (l defaultLogger) Debug(args ...any) {
 	zapLogger.Debug(fmt.Sprint(args...))
 }
 
-func (l singLogger) Info(args ...any) {
+func (l defaultLogger) Info(args ...any) {
 	zapLogger.Info(fmt.Sprint(args...))
 }
 
-func (l singLogger) Warn(args ...any) {
+func (l defaultLogger) Warn(args ...any) {
 	zapLogger.Warn(fmt.Sprint(args...))
 }
 
-func (l singLogger) Error(args ...any) {
+func (l defaultLogger) Error(args ...any) {
 	zapLogger.Error(fmt.Sprint(args...))
 }
 
-func (l singLogger) Fatal(args ...any) {
+func (l defaultLogger) Fatal(args ...any) {
 	zapLogger.Fatal(fmt.Sprint(args...))
 }
 
-func (l singLogger) Panic(args ...any) {
+func (l defaultLogger) Panic(args ...any) {
 	zapLogger.Panic(fmt.Sprint(args...))
 }
 
-var SingLogger Logger = singLogger{}
+var SingLogger Logger = defaultLogger{}

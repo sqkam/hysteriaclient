@@ -572,7 +572,7 @@ var logger L.Logger
 func Run(hyConfig HyConfig, logger2 L.Logger) {
 	logger = hL.SingLogger
 	if logger2 != nil {
-		logger = logger2
+		logger = hL.NewAppendLogger(logger2)
 	}
 	logger.Info("client mode")
 	signalChan := make(chan os.Signal, 1)
