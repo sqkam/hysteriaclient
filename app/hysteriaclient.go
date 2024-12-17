@@ -3,12 +3,12 @@ package app
 import (
 	"context"
 	"errors"
-	"github.com/sqkam/hysteriaclient/extras/transport/udphop"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/sqkam/hysteriaclient/extras/transport/udphop"
 	"github.com/sqkam/hysteriaclient/internal/proxymux"
 
 	"github.com/apernet/hysteria/core/v2/client"
@@ -36,12 +36,13 @@ func run(ctx context.Context, config clientConfig, runnerChan chan clientModeRun
 			// to interfere with the lazy mode option.
 		}, config.Lazy)
 	if err != nil {
-		logger.Fatal("failed to initialize client", zap.Error(err))
+		logger.Fatal("failed to initialize client", err)
 	}
+
 	defer c.Close()
 
 	uri := config.URI()
-	logger.Info("use this URI to share your server", zap.String("uri", uri))
+	logger.Info("use this URI to share your server", uri)
 
 	var runner clientModeRunner
 	if config.SOCKS5 != nil {
@@ -59,7 +60,7 @@ func run(ctx context.Context, config clientConfig, runnerChan chan clientModeRun
 	runnerChan <- r
 
 	if r.Err != nil {
-		logger.Fatal(r.Msg, zap.Error(r.Err))
+		logger.Fatal(r.Msg, r.Err)
 	} else {
 		logger.Info(r.Msg)
 	}
@@ -98,7 +99,7 @@ func Run(ctx context.Context, hyConfig HyConfig, logger2 L.Logger) {
 		} else {
 			// Close the client here as Fatal will exit the program without running defer
 			if r.Err != nil {
-				logger.Fatal(r.Msg, zap.Error(r.Err))
+				logger.Fatal(r.Msg, r.Err)
 			} else {
 				logger.Fatal(r.Msg)
 			}
