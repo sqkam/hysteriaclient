@@ -21,6 +21,7 @@ func init() {
 	globalMuxManager = &muxManager{
 		listeners: make(map[string]*muxListener),
 	}
+	inbound.SetTfo(true)
 }
 
 func (m *muxManager) GetOrCreate(address string) (*muxListener, error) {
