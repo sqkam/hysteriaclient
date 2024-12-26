@@ -39,7 +39,12 @@ func run(ctx context.Context, config ClientConfig, runnerChan chan clientModeRun
 		hL.SingLogger.Error("failed to initialize client", err)
 	}
 
-	defer c.Close()
+	defer func() {
+		if c!=nil{
+			c.Close()
+		}
+	}()
+
 
 	uri := config.URI()
 	hL.SingLogger.Info("use this URI to share your server", uri)
