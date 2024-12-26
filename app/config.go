@@ -23,7 +23,7 @@ import (
 	"github.com/sqkam/hysteriaclient/internal/utils"
 )
 
-type clientConfig struct {
+type ClientConfig struct {
 	Server        string                `mapstructure:"server"`
 	Servers       []string              `mapstructure:"servers"`
 	Auth          string                `mapstructure:"auth"`
@@ -158,7 +158,7 @@ func isPortHoppingPort(port string) bool {
 	return strings.Contains(port, "-") || strings.Contains(port, ",")
 }
 
-func (c *clientConfig) fillServerAddr(hyConfig *client.Config) error {
+func (c *ClientConfig) fillServerAddr(hyConfig *client.Config) error {
 	if c.Server == "" {
 		return configError{Field: "server", Err: errors.New("server address is empty")}
 	}
@@ -200,7 +200,7 @@ func (c *clientConfig) fillServerAddr(hyConfig *client.Config) error {
 
 // fillConnFactory must be called after fillServerAddr, as we have different logic
 // for ConnFactory depending on whether we have a port hopping address.
-func (c *clientConfig) fillConnFactory(hyConfig *client.Config) error {
+func (c *ClientConfig) fillConnFactory(hyConfig *client.Config) error {
 	so := &sockopts.SocketOptions{
 		BindInterface:       c.QUIC.Sockopts.BindInterface,
 		FirewallMark:        c.QUIC.Sockopts.FirewallMark,
@@ -274,7 +274,7 @@ func (f *adaptiveConnFactory) New(addr net.Addr) (net.PacketConn, error) {
 	}
 }
 
-func (c *clientConfig) fillAuth(hyConfig *client.Config) error {
+func (c *ClientConfig) fillAuth(hyConfig *client.Config) error {
 	hyConfig.Auth = c.Auth
 	return nil
 }
@@ -286,7 +286,7 @@ func normalizeCertHash(hash string) string {
 	return r
 }
 
-func (c *clientConfig) fillTLSConfig(hyConfig *client.Config) error {
+func (c *ClientConfig) fillTLSConfig(hyConfig *client.Config) error {
 	if c.TLS.SNI != "" {
 		hyConfig.TLSConfig.ServerName = c.TLS.SNI
 	}
@@ -319,7 +319,7 @@ func (c *clientConfig) fillTLSConfig(hyConfig *client.Config) error {
 	return nil
 }
 
-func (c *clientConfig) fillQUICConfig(hyConfig *client.Config) error {
+func (c *ClientConfig) fillQUICConfig(hyConfig *client.Config) error {
 	hyConfig.QUICConfig = client.QUICConfig{
 		InitialStreamReceiveWindow:     c.QUIC.InitStreamReceiveWindow,
 		MaxStreamReceiveWindow:         c.QUIC.MaxStreamReceiveWindow,
@@ -332,7 +332,7 @@ func (c *clientConfig) fillQUICConfig(hyConfig *client.Config) error {
 	return nil
 }
 
-func (c *clientConfig) fillBandwidthConfig(hyConfig *client.Config) error {
+func (c *ClientConfig) fillBandwidthConfig(hyConfig *client.Config) error {
 	// New core now allows users to omit bandwidth values and use built-in congestion control
 	var err error
 	if c.Bandwidth.Up != "" {
@@ -350,7 +350,7 @@ func (c *clientConfig) fillBandwidthConfig(hyConfig *client.Config) error {
 	return nil
 }
 
-func (c *clientConfig) fillFastOpen(hyConfig *client.Config) error {
+func (c *ClientConfig) fillFastOpen(hyConfig *client.Config) error {
 	hyConfig.FastOpen = c.FastOpen
 	return nil
 }
@@ -365,7 +365,7 @@ func (c *clientConfig) fillFastOpen(hyConfig *client.Config) error {
 // - TLS SNI
 // - TLS insecure
 // - TLS pinned SHA256 hash (normalized)
-func (c *clientConfig) URI() string {
+func (c *ClientConfig) URI() string {
 	q := url.Values{}
 	switch strings.ToLower(c.Obfs.Type) {
 	case "salamander":
@@ -406,7 +406,7 @@ func (c *clientConfig) URI() string {
 // Returns whether the server address field is a valid URI.
 // This allows a user to use put a URI as the server address and
 // omit the fields that are already contained in the URI.
-func (c *clientConfig) parseURI() bool {
+func (c *ClientConfig) parseURI() bool {
 	u, err := url.Parse(c.Server)
 	if err != nil {
 		return false
@@ -442,7 +442,7 @@ func (c *clientConfig) parseURI() bool {
 	return true
 }
 
-func (c *clientConfig) Config() (*client.Config, error) {
+func (c *ClientConfig) Config() (*client.Config, error) {
 	c.parseURI()
 	hyConfig := &client.Config{}
 	fillers := []func(*client.Config) error{

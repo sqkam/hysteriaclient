@@ -25,7 +25,7 @@ var (
 	disableUpdateCheck bool
 )
 
-func run(ctx context.Context, config clientConfig, runnerChan chan clientModeRunnerResult) {
+func run(ctx context.Context, config ClientConfig, runnerChan chan clientModeRunnerResult) {
 	c, err := client.NewReconnectableClient(
 		config.Config,
 		func(c client.Client, info *client.HandshakeInfo, count int) {
@@ -67,7 +67,7 @@ func run(ctx context.Context, config clientConfig, runnerChan chan clientModeRun
 }
 
 type HyConfig struct {
-	Hys    []clientConfig `mapstructure:"hys"`
+	Hys    []ClientConfig `mapstructure:"hys"`
 	OnlyV6 bool           `mapstructure:"only_v6"`
 }
 
